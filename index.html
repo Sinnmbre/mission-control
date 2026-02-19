@@ -37,6 +37,7 @@
       <a href="#ideas"     class="nav-item" data-section="ideas">💡 Ideas</a>
       <a href="#income"    class="nav-item" data-section="income">💰 Income</a>
       <a href="#schedule"  class="nav-item" data-section="schedule">📅 Schedule</a>
+      <a href="#wins"      class="nav-item" data-section="wins">🏆 Wins</a>
     </nav>
 
     <div class="sidebar-footer">
@@ -325,6 +326,39 @@
       </div>
 
       <div class="schedule-week" id="schedule-week"></div>
+    </section>
+
+    <!-- ══ WINS ════════════════════════════════ -->
+    <section id="section-wins" class="section">
+      <div class="section-head">
+        <h2 class="section-h2">🏆 Win Wall</h2>
+        <button class="btn btn-primary btn-sm" id="add-win-btn">+ Log a Win</button>
+      </div>
+
+      <!-- Streak + count -->
+      <div class="grid-3">
+        <div class="stat-card glass-card">
+          <div class="stat-card-icon">🔥</div>
+          <div class="stat-card-label">Win Streak</div>
+          <div class="stat-card-value" id="win-streak">0 days</div>
+        </div>
+        <div class="stat-card glass-card">
+          <div class="stat-card-icon">🏆</div>
+          <div class="stat-card-label">Total Wins</div>
+          <div class="stat-card-value" id="win-total">0</div>
+        </div>
+        <div class="stat-card glass-card">
+          <div class="stat-card-icon">⚡</div>
+          <div class="stat-card-label">This Week</div>
+          <div class="stat-card-value" id="win-week">0</div>
+        </div>
+      </div>
+
+      <!-- Quote -->
+      <div class="win-quote glass-card" id="win-quote"></div>
+
+      <!-- Win wall -->
+      <div id="wins-wall" class="wins-wall"></div>
     </section>
 
     <!-- ══ IDEAS ══════════════════════════════ -->

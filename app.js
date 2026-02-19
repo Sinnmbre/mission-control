@@ -892,3 +892,152 @@
     initSchedule(); renderSchedule();
   }
 })();
+
+/* ── WIN WALL (appended) ─────────────────────── */
+(function () {
+  const DB5 = {
+    get: (k,d) => { try { return JSON.parse(localStorage.getItem("mc_"+k)) ?? d; } catch { return d; } },
+    set: (k,v) => localStorage.setItem("mc_"+k, JSON.stringify(v))
+  };
+
+  function uid5() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+  function esc5(s) { return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+  function toast5(msg) {
+    const c = document.getElementById("toast-container");
+    const t = document.createElement("div"); t.className="toast"; t.textContent=msg; c.appendChild(t);
+    setTimeout(()=>t.remove(),3500);
+  }
+  function nowDate() { return new Date().toISOString().slice(0,10); }
+  function fmtDateNice(d) { return new Date(d).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}); }
+
+  const QUOTES = [
+    { text: "Every expert was once a beginner. Every pro was once an amateur.", author: "— Unknown" },
+    { text: "The warehouse is temporary. The mission is forever.", author: "— NightClaw 🌙" },
+    { text: "You don't have to be great to start, but you have to start to be great.", author: "— Zig Ziglar" },
+    { text: "Small wins compound. Log every single one.", author: "— NightClaw 🌙" },
+    { text: "The man who moves a mountain begins by carrying away small stones.", author: "— Confucius" },
+    { text: "Ship it. Improve it. Ship it again.", author: "— NightClaw 🌙" },
+    { text: "Success is the sum of small efforts repeated day in and day out.", author: "— R. Collier" },
+    { text: "You are one decision away from a completely different life.", author: "— Unknown" },
+    { text: "Building your own thing while working 10 hours? That's not hustle. That's war.", author: "— NightClaw 🌙" },
+  ];
+
+  const WIN_EMOJIS = { build:"🔨", launch:"🚀", client:"🤝", income:"💰", learn:"📚", personal:"⭐", milestone:"🏆" };
+
+  let wins = DB5.get("wins", []);
+
+  // Seed with today's first win
+  if (wins.length === 0) {
+    wins = [
+      { id: uid5(), title: "Built WatchParty from scratch", desc: "Full synchronized watch party app — WebSocket server, live chat, emoji reactions, queue, no API keys.", category: "build", size: "big", date: "2026-02-19" },
+      { id: uid5(), title: "Launched Mission Control", desc: "Personal command center to track every project, goal, and decision. Always running on the server.", category: "launch", size: "big", date: "2026-02-19" },
+      { id: uid5(), title: "First day building toward freedom", desc: "Decided to start. That's already more than most people do.", category: "personal", size: "big", date: "2026-02-19" },
+    ];
+    DB5.set("wins", wins);
+  }
+
+  function calcStreak() {
+    if (!wins.length) return 0;
+    const dates = [...new Set(wins.map(w => w.date))].sort().reverse();
+    let streak = 0;
+    let check = new Date(); check.setHours(0,0,0,0);
+    for (const d of dates) {
+      const wd = new Date(d); wd.setHours(0,0,0,0);
+      const diff = Math.round((check - wd) / 86400000);
+      if (diff === 0 || diff === streak) { streak++; check = wd; }
+      else if (diff === 1) { streak++; check = wd; }
+      else break;
+    }
+    return streak;
+  }
+
+  function renderWins() {
+    // Stats
+    const streak = calcStreak();
+    const total  = wins.length;
+    const now    = new Date();
+    const weekStart = new Date(now); weekStart.setDate(now.getDate() - now.getDay());
+    const weekWins  = wins.filter(w => new Date(w.date) >= weekStart).length;
+
+    const streakEl = document.getElementById("win-streak");
+    const totalEl  = document.getElementById("win-total");
+    const weekEl   = document.getElementById("win-week");
+    if (streakEl) streakEl.textContent = streak + (streak === 1 ? " day 🔥" : " days 🔥");
+    if (totalEl)  totalEl.textContent  = total;
+    if (weekEl)   weekEl.textContent   = weekWins;
+
+    // Random motivational quote
+    const q = QUOTES[Math.floor(Math.random() * QUOTES.length)];
+    const qEl = document.getElementById("win-quote");
+    if (qEl) qEl.innerHTML = `
+      <div class="win-quote-icon">💬</div>
+      <div>
+        <div class="win-quote-text">"${esc5(q.text)}"</div>
+        <div class="win-quote-author">${esc5(q.author)}</div>
+      </div>
+    `;
+
+    // Wall
+    const wall = document.getElementById("wins-wall");
+    if (!wall) return;
+
+    if (!wins.length) {
+      wall.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🏆</div><p>No wins yet — log your first one!</p></div>';
+      return;
+    }
+
+    wall.innerHTML = [...wins].reverse().map((w, i) => `
+      <div class="win-card glass-card win-size-${w.size||"small"}" data-id="${w.id}">
+        <div class="win-header">
+          <div class="win-emoji">${WIN_EMOJIS[w.category]||"⭐"}</div>
+          <div class="win-title-wrap">
+            <div class="win-title">${esc5(w.title)}</div>
+            <span class="win-category-badge">${esc5(w.category||"win")}</span>
+          </div>
+        </div>
+        ${w.desc ? `<div class="win-desc">${esc5(w.desc)}</div>` : ""}
+        <div class="win-footer">
+          <div class="win-date">${fmtDateNice(w.date)}</div>
+          <button class="win-del" data-id="${w.id}">🗑</button>
+        </div>
+      </div>
+    `).join("");
+
+    wall.querySelectorAll(".win-del").forEach(btn => {
+      btn.addEventListener("click", () => {
+        wins = wins.filter(w => w.id !== btn.dataset.id);
+        DB5.set("wins", wins);
+        renderWins();
+        toast5("Win removed");
+      });
+    });
+  }
+
+  function initWins() {
+    document.getElementById("add-win-btn")?.addEventListener("click", () => {
+      const title = prompt("What did you win / achieve / ship?");
+      if (!title?.trim()) return;
+      const desc = prompt("Describe it (optional):") || "";
+      const cat  = prompt("Category:\nbuild / launch / client / income / learn / personal / milestone") || "personal";
+      const size = prompt("Size? big / small") || "small";
+
+      wins.push({ id: uid5(), title: title.trim(), desc: desc.trim(), category: cat.trim().toLowerCase(), size: size.trim().toLowerCase(), date: nowDate() });
+      DB5.set("wins", wins);
+      renderWins();
+
+      // Animate newest card
+      setTimeout(() => {
+        const cards = document.querySelectorAll(".win-card");
+        if (cards[0]) { cards[0].classList.add("new-win"); }
+      }, 50);
+
+      toast5("🏆 Win logged! Keep going!");
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => { initWins(); renderWins(); });
+  } else {
+    initWins(); renderWins();
+  }
+})();
