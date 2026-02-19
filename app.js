@@ -760,3 +760,135 @@
     initIncome(); renderIncome();
   }
 })();
+
+/* ── SCHEDULE (appended) ─────────────────────── */
+(function () {
+  const DB4 = {
+    get: (k,d) => { try { return JSON.parse(localStorage.getItem("mc_"+k)) ?? d; } catch { return d; } },
+    set: (k,v) => localStorage.setItem("mc_"+k, JSON.stringify(v))
+  };
+
+  function uid4() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+  function esc4(s) { return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+  function toast4(msg) {
+    const c = document.getElementById("toast-container");
+    const t = document.createElement("div"); t.className="toast"; t.textContent=msg; c.appendChild(t);
+    setTimeout(()=>t.remove(),3000);
+  }
+
+  const DAY_NAMES = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  const DAY_SHORT = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+
+  // Get the Monday of the current week
+  function getWeekDays() {
+    const now = new Date();
+    const dow = now.getDay(); // 0=Sun
+    const days = [];
+    // Start from Sunday
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(now);
+      d.setDate(now.getDate() - dow + i);
+      days.push(d);
+    }
+    return days;
+  }
+
+  function dateKey(d) {
+    return d.toISOString().slice(0,10);
+  }
+
+  function isToday(d) {
+    return dateKey(d) === dateKey(new Date());
+  }
+
+  function isPast(d) {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const dd = new Date(d); dd.setHours(0,0,0,0);
+    return dd < today;
+  }
+
+  let schedule = DB4.get("schedule", {}); // { "2026-02-19": [{id, text, done}] }
+
+  function renderSchedule() {
+    const container = document.getElementById("schedule-week");
+    if (!container) return;
+
+    const days = getWeekDays();
+    container.innerHTML = "";
+
+    days.forEach(day => {
+      const key   = dateKey(day);
+      const tasks = schedule[key] || [];
+      const done  = tasks.filter(t => t.done).length;
+      const total = tasks.length;
+      const pct   = total ? Math.round((done/total)*100) : 0;
+      const today = isToday(day);
+      const past  = isPast(day);
+
+      const card = document.createElement("div");
+      card.className = "day-card" + (today ? " today" : "") + (past && !today ? " past" : "");
+      card.innerHTML = `
+        <div class="day-header">
+          <div class="day-name">${DAY_SHORT[day.getDay()]}</div>
+          ${today ? '<span class="day-today-badge">Today</span>' : `<span class="day-date">${day.getDate()}/${day.getMonth()+1}</span>`}
+        </div>
+        <div class="day-tasks" id="tasks-${key}">
+          ${tasks.map(t => `
+            <div class="day-task" data-key="${key}" data-id="${t.id}">
+              <div class="task-check ${t.done ? "done" : ""}">${t.done ? "✓" : ""}</div>
+              <span class="task-text ${t.done ? "done" : ""}">${esc4(t.text)}</span>
+            </div>
+          `).join("")}
+        </div>
+        ${total > 0 ? `
+          <div class="day-progress">${done}/${total}</div>
+          <div class="day-progress-bar"><div class="day-progress-fill" style="width:${pct}%"></div></div>
+        ` : ""}
+        <button class="day-add-btn" data-key="${key}">+ Add task</button>
+      `;
+
+      // Task check toggle
+      card.querySelectorAll(".day-task").forEach(taskEl => {
+        taskEl.addEventListener("click", () => {
+          const { key: k, id } = taskEl.dataset;
+          const task = (schedule[k]||[]).find(t => t.id === id);
+          if (task) {
+            task.done = !task.done;
+            DB4.set("schedule", schedule);
+            renderSchedule();
+            if (task.done) toast4("✅ Done!");
+          }
+        });
+      });
+
+      // Add task button
+      card.querySelector(".day-add-btn").addEventListener("click", () => {
+        const text = prompt(`Add task for ${DAY_NAMES[day.getDay()]}:`);
+        if (!text?.trim()) return;
+        if (!schedule[key]) schedule[key] = [];
+        schedule[key].push({ id: uid4(), text: text.trim(), done: false });
+        DB4.set("schedule", schedule);
+        renderSchedule();
+      });
+
+      container.appendChild(card);
+    });
+  }
+
+  function initSchedule() {
+    document.getElementById("reset-week-btn")?.addEventListener("click", () => {
+      if (!confirm("Reset all tasks for this week? Completed tasks will be cleared.")) return;
+      const days = getWeekDays();
+      days.forEach(d => { delete schedule[dateKey(d)]; });
+      DB4.set("schedule", schedule);
+      renderSchedule();
+      toast4("Week reset 🔄");
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => { initSchedule(); renderSchedule(); });
+  } else {
+    initSchedule(); renderSchedule();
+  }
+})();
