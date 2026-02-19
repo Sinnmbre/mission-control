@@ -38,6 +38,7 @@
       <a href="#income"    class="nav-item" data-section="income">💰 Income</a>
       <a href="#schedule"  class="nav-item" data-section="schedule">📅 Schedule</a>
       <a href="#wins"      class="nav-item" data-section="wins">🏆 Wins</a>
+      <a href="#clients"   class="nav-item" data-section="clients">🤝 Clients</a>
     </nav>
 
     <div class="sidebar-footer">
@@ -359,6 +360,36 @@
 
       <!-- Win wall -->
       <div id="wins-wall" class="wins-wall"></div>
+    </section>
+
+    <!-- ══ CLIENTS / CRM ══════════════════════ -->
+    <section id="section-clients" class="section">
+      <div class="section-head">
+        <h2 class="section-h2">🤝 Clients & Leads</h2>
+        <button class="btn btn-primary btn-sm" id="add-client-btn">+ Add Lead</button>
+      </div>
+
+      <!-- Stats -->
+      <div class="grid-3">
+        <div class="stat-card glass-card">
+          <div class="stat-card-icon">🎯</div>
+          <div class="stat-card-label">Active Leads</div>
+          <div class="stat-card-value" id="crm-leads">0</div>
+        </div>
+        <div class="stat-card glass-card">
+          <div class="stat-card-icon">💼</div>
+          <div class="stat-card-label">Active Clients</div>
+          <div class="stat-card-value" id="crm-active">0</div>
+        </div>
+        <div class="stat-card glass-card">
+          <div class="stat-card-icon">💰</div>
+          <div class="stat-card-label">Pipeline Value</div>
+          <div class="stat-card-value" id="crm-pipeline">$0</div>
+        </div>
+      </div>
+
+      <!-- Pipeline columns -->
+      <div class="crm-pipeline-board" id="crm-board"></div>
     </section>
 
     <!-- ══ IDEAS ══════════════════════════════ -->

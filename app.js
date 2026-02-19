@@ -1041,3 +1041,127 @@
     initWins(); renderWins();
   }
 })();
+
+/* ── CRM / CLIENTS (appended) ────────────────── */
+(function () {
+  const DB6 = {
+    get: (k,d) => { try { return JSON.parse(localStorage.getItem("mc_"+k)) ?? d; } catch { return d; } },
+    set: (k,v) => localStorage.setItem("mc_"+k, JSON.stringify(v))
+  };
+
+  function uid6() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+  function esc6(s) { return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+  function fmtMoney6(n) { return "$" + Number(n||0).toLocaleString("en-US",{minimumFractionDigits:0,maximumFractionDigits:0}); }
+  function toast6(msg) {
+    const c = document.getElementById("toast-container");
+    const t = document.createElement("div"); t.className="toast"; t.textContent=msg; c.appendChild(t);
+    setTimeout(()=>t.remove(),3000);
+  }
+  function nowDate6() { return new Date().toISOString().slice(0,10); }
+  function fmtD(d) { return new Date(d).toLocaleDateString("en-US",{month:"short",day:"numeric"}); }
+
+  const STAGES = [
+    { key: "lead",     label: "Lead",      desc: "New prospect" },
+    { key: "contact",  label: "Contacted", desc: "Reached out" },
+    { key: "proposal", label: "Proposal",  desc: "Sent offer" },
+    { key: "active",   label: "Client",    desc: "Paying now" },
+    { key: "closed",   label: "Closed",    desc: "Done / lost" },
+  ];
+
+  const NEXT_STAGE = { lead:"contact", contact:"proposal", proposal:"active", active:"closed" };
+  const PREV_STAGE = { contact:"lead", proposal:"contact", active:"proposal", closed:"active" };
+
+  let clients = DB6.get("crm_clients", []);
+
+  function renderCRM() {
+    // Stats
+    const leads    = clients.filter(c => c.stage === "lead" || c.stage === "contact").length;
+    const active   = clients.filter(c => c.stage === "active").length;
+    const pipeline = clients.filter(c => c.stage !== "closed").reduce((s,c) => s + Number(c.value||0), 0);
+
+    const lEl = document.getElementById("crm-leads");
+    const aEl = document.getElementById("crm-active");
+    const pEl = document.getElementById("crm-pipeline");
+    if (lEl) lEl.textContent = leads;
+    if (aEl) aEl.textContent = active;
+    if (pEl) pEl.textContent = fmtMoney6(pipeline);
+
+    // Board
+    const board = document.getElementById("crm-board");
+    if (!board) return;
+
+    board.innerHTML = STAGES.map(stage => {
+      const cards = clients.filter(c => c.stage === stage.key);
+      return `
+        <div class="crm-col crm-col-${stage.key}">
+          <div class="crm-col-header">
+            <span>${stage.label}</span>
+            <span class="crm-col-count">${cards.length}</span>
+          </div>
+          ${cards.length === 0
+            ? `<div class="crm-empty">Empty</div>`
+            : cards.map(c => `
+              <div class="crm-card glass-card" data-id="${c.id}">
+                <div class="crm-card-name">${esc6(c.name)}</div>
+                <div class="crm-card-type">${esc6(c.service||"")}</div>
+                ${c.value ? `<div class="crm-card-value">${fmtMoney6(c.value)}</div>` : ""}
+                ${c.note  ? `<div class="crm-card-note">${esc6(c.note)}</div>` : ""}
+                <div class="crm-card-date">Added ${fmtD(c.date)}</div>
+                <div class="crm-card-actions">
+                  ${NEXT_STAGE[c.stage] ? `<button class="crm-move-btn" data-id="${c.id}" data-dir="next">→ ${STAGES.find(s=>s.key===NEXT_STAGE[c.stage])?.label}</button>` : ""}
+                  ${PREV_STAGE[c.stage] ? `<button class="crm-move-btn" data-id="${c.id}" data-dir="prev">← Back</button>` : ""}
+                  <button class="crm-del-btn" data-id="${c.id}">🗑</button>
+                </div>
+              </div>
+            `).join("")
+          }
+        </div>
+      `;
+    }).join("");
+
+    // Move buttons
+    board.querySelectorAll(".crm-move-btn").forEach(btn => {
+      btn.addEventListener("click", e => {
+        e.stopPropagation();
+        const c = clients.find(x => x.id === btn.dataset.id);
+        if (!c) return;
+        c.stage = btn.dataset.dir === "next" ? NEXT_STAGE[c.stage] : PREV_STAGE[c.stage];
+        DB6.set("crm_clients", clients);
+        renderCRM();
+        toast6(`Moved to ${STAGES.find(s=>s.key===c.stage)?.label} ✅`);
+      });
+    });
+
+    // Delete
+    board.querySelectorAll(".crm-del-btn").forEach(btn => {
+      btn.addEventListener("click", e => {
+        e.stopPropagation();
+        clients = clients.filter(c => c.id !== btn.dataset.id);
+        DB6.set("crm_clients", clients);
+        renderCRM();
+        toast6("Removed");
+      });
+    });
+  }
+
+  function initCRM() {
+    document.getElementById("add-client-btn")?.addEventListener("click", () => {
+      const name    = prompt("Name / Company:");
+      if (!name?.trim()) return;
+      const service = prompt("Service? (e.g. Freelance Build, AI Automation, Website)") || "";
+      const value   = parseFloat(prompt("Deal value $ (leave blank if unknown):") || "0") || 0;
+      const note    = prompt("Any notes? (optional)") || "";
+
+      clients.push({ id: uid6(), name: name.trim(), service: service.trim(), value, note: note.trim(), stage: "lead", date: nowDate6() });
+      DB6.set("crm_clients", clients);
+      renderCRM();
+      toast6("Lead added 🎯");
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => { initCRM(); renderCRM(); });
+  } else {
+    initCRM(); renderCRM();
+  }
+})();
