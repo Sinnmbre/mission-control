@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mission Control 🌙</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- BG -->
+  <div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <!-- ══ SIDEBAR ══════════════════════════════ -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">🌙</div>
+      <div>
+        <div class="brand-title">NightClaw</div>
+        <div class="brand-sub">Mission Control</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="#overview"  class="nav-item active" data-section="overview">🏠 Overview</a>
+      <a href="#projects"  class="nav-item" data-section="projects">🚀 Projects</a>
+      <a href="#devlog"    class="nav-item" data-section="devlog">📋 Dev Log</a>
+      <a href="#goals"     class="nav-item" data-section="goals">🎯 Goals</a>
+      <a href="#uptime"    class="nav-item" data-section="uptime">🟢 Uptime</a>
+      <a href="#notes"     class="nav-item" data-section="notes">📝 Notes</a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-avatar">D</div>
+        <div>
+          <div class="user-name">Domidev</div>
+          <div class="user-status">🏗️ Building</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ══ MAIN ══════════════════════════════════ -->
+  <main class="main">
+
+    <!-- TOP BAR -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1 class="page-title" id="page-title">Overview</h1>
+        <div class="live-clock" id="live-clock"></div>
+      </div>
+      <div class="topbar-right">
+        <button class="icon-btn" id="theme-toggle" title="Toggle theme">☀️</button>
+        <div class="connection-badge" id="connection-badge">
+          <span class="dot dot-green"></span> Live
+        </div>
+      </div>
+    </header>
+
+    <!-- ══ OVERVIEW ══════════════════════════ -->
+    <section id="section-overview" class="section active">
+
+      <!-- Mission banner -->
+      <div class="mission-banner glass-card">
+        <div class="mission-left">
+          <div class="mission-label">THE MISSION</div>
+          <h2 class="mission-title">Escape the warehouse.<br/>Build the business. Win.</h2>
+          <p class="mission-sub">Warehouse → Freelance Builds → AI Agency → Full Independence</p>
+        </div>
+        <div class="mission-right">
+          <div class="mission-stat">
+            <div class="stat-num" id="stat-projects">1</div>
+            <div class="stat-label">Projects Built</div>
+          </div>
+          <div class="mission-stat">
+            <div class="stat-num" id="stat-logs">0</div>
+            <div class="stat-label">Log Entries</div>
+          </div>
+          <div class="mission-stat">
+            <div class="stat-num">Day 1</div>
+            <div class="stat-label">Since We Met</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick status grid -->
+      <div class="grid-3">
+        <div class="stat-card glass-card">
+          <div class="stat-card-icon">🎬</div>
+          <div class="stat-card-label">WatchParty</div>
+          <div class="stat-card-value" id="wp-status-overview">Checking...</div>
+        </div>
+        <div class="stat-card glass-card">
+          <div class="stat-card-icon">💰</div>
+          <div class="stat-card-label">Income Goal</div>
+          <div class="stat-card-value">Work in progress</div>
+        </div>
+        <div class="stat-card glass-card">
+          <div class="stat-card-icon">🔥</div>
+          <div class="stat-card-label">Current Focus</div>
+          <div class="stat-card-value">WatchParty MVP</div>
+        </div>
+      </div>
+
+      <!-- Recent activity -->
+      <div class="glass-card section-card">
+        <div class="card-header">
+          <h3 class="card-title">⚡ Recent Activity</h3>
+        </div>
+        <div id="recent-activity" class="activity-list"></div>
+      </div>
+
+    </section>
+
+    <!-- ══ PROJECTS ═══════════════════════════ -->
+    <section id="section-projects" class="section">
+      <div class="section-head">
+        <h2 class="section-h2">Projects</h2>
+        <button class="btn btn-primary btn-sm" id="add-project-btn">+ New Project</button>
+      </div>
+
+      <div id="projects-grid" class="projects-grid"></div>
+
+      <!-- Add project modal -->
+      <div id="project-modal" class="modal" style="display:none;">
+        <div class="modal-card glass-card">
+          <h3 class="modal-title">Add Project</h3>
+          <div class="form-group">
+            <label class="form-label">Project Name</label>
+            <input type="text" class="input" id="proj-name" placeholder="e.g. AI Automation Agency" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <input type="text" class="input" id="proj-desc" placeholder="What is this?" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">GitHub URL</label>
+            <input type="text" class="input" id="proj-github" placeholder="https://github.com/..." />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Live URL</label>
+            <input type="text" class="input" id="proj-url" placeholder="https://..." />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Status</label>
+            <select class="input" id="proj-status">
+              <option value="in-progress">🔨 In Progress</option>
+              <option value="live">🟢 Live</option>
+              <option value="idea">💡 Idea</option>
+              <option value="paused">⏸ Paused</option>
+            </select>
+          </div>
+          <div class="modal-actions">
+            <button class="btn btn-primary" id="save-project-btn">Save Project</button>
+            <button class="btn btn-ghost" id="cancel-project-btn">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ DEV LOG ════════════════════════════ -->
+    <section id="section-devlog" class="section">
+      <div class="section-head">
+        <h2 class="section-h2">Dev Log</h2>
+        <button class="btn btn-primary btn-sm" id="add-log-btn">+ Add Entry</button>
+      </div>
+
+      <!-- Add entry form -->
+      <div id="log-form" class="glass-card section-card" style="display:none;">
+        <div class="form-group">
+          <label class="form-label">What did we build / decide / learn?</label>
+          <textarea class="input textarea" id="log-text" placeholder="e.g. Built live chat feature using Ably WebSockets. Fixed double player bug on Twitch embed..."></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group" style="flex:1">
+            <label class="form-label">Project</label>
+            <input type="text" class="input" id="log-project" placeholder="WatchParty" />
+          </div>
+          <div class="form-group" style="flex:1">
+            <label class="form-label">Type</label>
+            <select class="input" id="log-type">
+              <option value="build">🔨 Build</option>
+              <option value="fix">🐛 Fix</option>
+              <option value="decision">💡 Decision</option>
+              <option value="research">🔍 Research</option>
+              <option value="deploy">🚀 Deploy</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-primary" id="save-log-btn">Save Entry</button>
+          <button class="btn btn-ghost" id="cancel-log-btn">Cancel</button>
+        </div>
+      </div>
+
+      <div id="devlog-list" class="devlog-list"></div>
+    </section>
+
+    <!-- ══ GOALS ══════════════════════════════ -->
+    <section id="section-goals" class="section">
+      <div class="section-head">
+        <h2 class="section-h2">Goals</h2>
+        <button class="btn btn-primary btn-sm" id="add-goal-btn">+ Add Goal</button>
+      </div>
+
+      <div id="goals-list" class="goals-list"></div>
+    </section>
+
+    <!-- ══ UPTIME ══════════════════════════════ -->
+    <section id="section-uptime" class="section">
+      <div class="section-head">
+        <h2 class="section-h2">Uptime Monitor</h2>
+        <button class="btn btn-secondary btn-sm" id="check-all-btn">🔄 Check All</button>
+      </div>
+
+      <div class="glass-card section-card">
+        <div class="uptime-add-row">
+          <input type="text" class="input" id="uptime-url-input" placeholder="https://your-app.railway.app" />
+          <input type="text" class="input input-sm" id="uptime-name-input" placeholder="Name" />
+          <button class="btn btn-primary btn-sm" id="add-uptime-btn">+ Monitor</button>
+        </div>
+      </div>
+
+      <div id="uptime-list" class="uptime-list"></div>
+    </section>
+
+    <!-- ══ NOTES ══════════════════════════════ -->
+    <section id="section-notes" class="section">
+      <div class="section-head">
+        <h2 class="section-h2">Notes</h2>
+        <button class="btn btn-primary btn-sm" id="add-note-btn">+ New Note</button>
+      </div>
+      <div id="notes-grid" class="notes-grid"></div>
+    </section>
+
+  </main>
+
+  <!-- Toast -->
+  <div id="toast-container"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
