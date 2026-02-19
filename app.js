@@ -590,3 +590,173 @@
     initIdeas(); renderIdeas();
   }
 })();
+
+/* ── INCOME TRACKER (appended) ──────────────── */
+(function () {
+  const DB3 = {
+    get: (k,d) => { try { return JSON.parse(localStorage.getItem("mc_"+k)) ?? d; } catch { return d; } },
+    set: (k,v) => localStorage.setItem("mc_"+k, JSON.stringify(v))
+  };
+
+  function uid3() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+  function esc3(s) { return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+  function toast3(msg) {
+    const c = document.getElementById("toast-container");
+    const t = document.createElement("div"); t.className="toast"; t.textContent=msg; c.appendChild(t);
+    setTimeout(()=>t.remove(),3200);
+  }
+  function fmtMoney(n) { return "$" + Number(n||0).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+  let income = DB3.get("income", []);
+
+  const TYPE_ICONS = { freelance:"💻", product:"📦", agency:"🤖", content:"📱", other:"💼" };
+  const TYPE_LABELS= { freelance:"Freelance", product:"Digital Product", agency:"Agency", content:"Content", other:"Other" };
+
+  function getMonthKey(dateStr) {
+    const d = new Date(dateStr);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+  }
+
+  function getMonthLabel(key) {
+    const [y,m] = key.split("-");
+    return new Date(y, m-1, 1).toLocaleString("en-US",{month:"short"}) + " " + y.slice(2);
+  }
+
+  function renderStats() {
+    const total = income.reduce((s,e) => s + Number(e.amount||0), 0);
+    const now   = new Date();
+    const thisMonthKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
+    const monthTotal = income.filter(e => getMonthKey(e.date) === thisMonthKey).reduce((s,e)=>s+Number(e.amount||0),0);
+
+    // Best month
+    const byMonth = {};
+    income.forEach(e => { const k = getMonthKey(e.date); byMonth[k] = (byMonth[k]||0) + Number(e.amount||0); });
+    const best = Math.max(0, ...Object.values(byMonth));
+
+    const t = document.getElementById("income-total");
+    const m = document.getElementById("income-month");
+    const b = document.getElementById("income-best");
+    if (t) t.textContent = fmtMoney(total);
+    if (m) m.textContent = fmtMoney(monthTotal);
+    if (b) b.textContent = fmtMoney(best);
+  }
+
+  function renderChart() {
+    const chart = document.getElementById("income-chart");
+    if (!chart) return;
+
+    if (!income.length) {
+      chart.innerHTML = '<div class="chart-empty">Log your first income to see the chart 📈</div>';
+      return;
+    }
+
+    // Build monthly totals — last 6 months
+    const months = [];
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+      months.push({ key, label: getMonthLabel(key), total: 0 });
+    }
+
+    income.forEach(e => {
+      const k = getMonthKey(e.date);
+      const m = months.find(x => x.key === k);
+      if (m) m.total += Number(e.amount||0);
+    });
+
+    const max = Math.max(1, ...months.map(m => m.total));
+
+    chart.innerHTML = months.map(m => {
+      const pct = Math.round((m.total / max) * 90);
+      const hasData = m.total > 0;
+      return `
+        <div class="chart-col">
+          <div class="chart-bar-wrap">
+            <div class="chart-bar" style="height:${hasData ? Math.max(pct,4) : 3}px; opacity:${hasData?1:0.2};" data-tip="${fmtMoney(m.total)}"></div>
+          </div>
+          <div class="chart-label">${m.label}</div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  function renderIncome() {
+    const list = document.getElementById("income-list");
+    if (!list) return;
+    renderStats();
+    renderChart();
+
+    if (!income.length) {
+      list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">💰</div><p>No income logged yet. Every dollar counts!</p></div>';
+      return;
+    }
+
+    list.innerHTML = [...income].reverse().map(e => `
+      <div class="income-entry glass-card" data-id="${e.id}">
+        <div class="income-type-icon">${TYPE_ICONS[e.type]||"💼"}</div>
+        <div class="income-info">
+          <div class="income-source">${esc3(e.source)}</div>
+          <div class="income-meta">${TYPE_LABELS[e.type]||e.type} · ${esc3(e.date)}${e.notes ? " · " + esc3(e.notes) : ""}</div>
+        </div>
+        <div class="income-amount">+${fmtMoney(e.amount)}</div>
+        <button class="income-del" data-id="${e.id}">🗑</button>
+      </div>
+    `).join("");
+
+    list.querySelectorAll(".income-del").forEach(btn => {
+      btn.addEventListener("click", () => {
+        income = income.filter(e => e.id !== btn.dataset.id);
+        DB3.set("income", income);
+        renderIncome();
+        toast3("Entry removed");
+      });
+    });
+  }
+
+  function initIncome() {
+    const form      = document.getElementById("income-form");
+    const addBtn    = document.getElementById("add-income-btn");
+    const saveBtn   = document.getElementById("save-income-btn");
+    const cancelBtn = document.getElementById("cancel-income-btn");
+    const dateInput = document.getElementById("income-date");
+
+    // Default date to today
+    if (dateInput) dateInput.value = new Date().toISOString().slice(0,10);
+
+    addBtn?.addEventListener("click", () => {
+      form.style.display = form.style.display === "none" ? "flex" : "none";
+      form.style.flexDirection = "column";
+      form.style.gap = "14px";
+      if (dateInput) dateInput.value = new Date().toISOString().slice(0,10);
+    });
+
+    cancelBtn?.addEventListener("click", () => form.style.display = "none");
+
+    saveBtn?.addEventListener("click", () => {
+      const source = document.getElementById("income-source")?.value.trim();
+      const amount = parseFloat(document.getElementById("income-amount")?.value);
+      const type   = document.getElementById("income-type")?.value;
+      const notes  = document.getElementById("income-notes")?.value.trim();
+      const date   = document.getElementById("income-date")?.value;
+
+      if (!source) { toast3("Enter a source"); return; }
+      if (!amount || amount <= 0) { toast3("Enter a valid amount"); return; }
+
+      income.push({ id: uid3(), source, amount, type, notes, date: date || new Date().toISOString().slice(0,10) });
+      DB3.set("income", income);
+
+      // Reset form
+      ["income-source","income-amount","income-notes"].forEach(id => { const el=document.getElementById(id); if(el) el.value=""; });
+      form.style.display = "none";
+      renderIncome();
+      toast3(`💰 +${fmtMoney(amount)} logged!`);
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => { initIncome(); renderIncome(); });
+  } else {
+    initIncome(); renderIncome();
+  }
+})();
