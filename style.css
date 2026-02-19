@@ -578,27 +578,41 @@ body {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 5px;
+  width: fit-content;
 }
 
 .idea-tab {
-  padding: 6px 16px;
+  padding: 8px 20px;
   border-radius: 100px;
   border: 1px solid var(--border2);
   background: var(--glass);
   color: var(--text2);
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   font-weight: 600;
   font-family: var(--font);
   cursor: pointer;
   transition: all var(--trans);
+  letter-spacing: 0.01em;
 }
 
-.idea-tab:hover { color: var(--text); border-color: var(--purple); }
+.idea-tab:hover { color: var(--text); border-color: var(--purple); background: var(--glass-b); }
+
 .idea-tab.active {
-  background: linear-gradient(135deg, rgba(124,58,237,0.25), rgba(236,72,153,0.15));
-  color: var(--text);
-  border-color: rgba(124,58,237,0.35);
+  background: linear-gradient(135deg, var(--purple), var(--pink));
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 4px 14px rgba(124,58,237,0.35);
 }
+
+/* Individual tab accent colors when active */
+.idea-tab[data-filter="pending"].active  { background: linear-gradient(135deg, #b45309, #d97706); box-shadow: 0 4px 14px rgba(245,158,11,0.3); }
+.idea-tab[data-filter="approved"].active { background: linear-gradient(135deg, #047857, #10b981); box-shadow: 0 4px 14px rgba(16,185,129,0.3); }
+.idea-tab[data-filter="rejected"].active { background: linear-gradient(135deg, #b91c1c, #ef4444); box-shadow: 0 4px 14px rgba(239,68,68,0.3); }
+.idea-tab[data-filter="built"].active    { background: linear-gradient(135deg, #6d28d9, #7c3aed); box-shadow: 0 4px 14px rgba(124,58,237,0.35); }
 
 .ideas-list { display: flex; flex-direction: column; gap: 10px; }
 
