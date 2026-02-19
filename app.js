@@ -471,3 +471,122 @@
   });
 
 })();
+
+/* ── IDEAS (appended) ───────────────────────── */
+(function () {
+  const DB2 = {
+    get: (k, d) => { try { return JSON.parse(localStorage.getItem("mc_"+k)) ?? d; } catch { return d; } },
+    set: (k, v) => localStorage.setItem("mc_"+k, JSON.stringify(v))
+  };
+
+  function uid2() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+  function esc2(s) { return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+  function nowStr2() { return new Date().toLocaleString("en-US",{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"}); }
+  function toast2(msg) {
+    const c = document.getElementById("toast-container");
+    const t = document.createElement("div"); t.className="toast"; t.textContent=msg; c.appendChild(t);
+    setTimeout(()=>t.remove(),3200);
+  }
+
+  let ideas = DB2.get("ideas", []);
+  let currentFilter = "all";
+
+  // Seed default ideas from backlog
+  if (ideas.length === 0) {
+    const defaults = [
+      { title: "WatchParty uptime auto-monitor", desc: "Auto-add WatchParty to the uptime monitor the first time someone visits Mission Control." },
+      { title: "Income tracker", desc: "Log freelance and sales income over time. See monthly totals and progress toward the goal." },
+      { title: "Pomodoro timer", desc: "Built-in 25/5 Pomodoro timer so Domidev can focus sessions without leaving the dashboard." },
+      { title: "Roadmap / Kanban board", desc: "Kanban view for projects: To Do → In Progress → Done. Drag and drop cards." },
+      { title: "Daily standup prompt", desc: "Each morning, a quick 3-question prompt: What did I do? What's next? Any blockers?" },
+      { title: "Countdown to goal date", desc: "Set a target date (e.g. leave warehouse by X) and show a live countdown on the overview." },
+      { title: "Quick-add keyboard shortcuts", desc: "Press N for new note, L for new log entry, I for new idea — never touch the mouse." },
+      { title: "Export dev log as Markdown", desc: "One-click export of the full dev log as a .md file — great for sharing progress." },
+      { title: "Streak tracker", desc: "Track how many days in a row Domidev has worked on a project. Motivational streak counter." },
+      { title: "GitHub commit feed", desc: "Show recent commits from active GitHub repos directly in the dashboard." },
+    ];
+    ideas = defaults.map(d => ({ id: uid2(), title: d.title, desc: d.desc, status: "pending", date: "2026-02-19", proposedBy: "NightClaw 🌙" }));
+    DB2.set("ideas", ideas);
+  }
+
+  function statusIcon(s) {
+    return { pending:"⏳", approved:"✅", rejected:"❌", built:"🚀" }[s] || "💡";
+  }
+
+  function renderIdeas() {
+    const list = document.getElementById("ideas-list");
+    if (!list) return;
+    const filtered = currentFilter === "all" ? ideas : ideas.filter(i => i.status === currentFilter);
+
+    if (!filtered.length) {
+      list.innerHTML = `<div class="empty-state"><div class="empty-state-icon">💡</div><p>No ideas in this category yet.</p></div>`;
+      return;
+    }
+
+    list.innerHTML = [...filtered].reverse().map(idea => `
+      <div class="idea-card glass-card" data-id="${idea.id}">
+        <div class="idea-status-icon">${statusIcon(idea.status)}</div>
+        <div class="idea-body">
+          <div class="idea-title">${esc2(idea.title)}</div>
+          <div class="idea-desc">${esc2(idea.desc)}</div>
+          <div>
+            <span class="idea-status-badge badge-${idea.status}">${idea.status.charAt(0).toUpperCase()+idea.status.slice(1)}</span>
+          </div>
+          <div class="idea-meta">Proposed by ${esc2(idea.proposedBy||"?")} · ${esc2(idea.date)}</div>
+        </div>
+        <div class="idea-actions">
+          ${idea.status !== "approved" && idea.status !== "built" ? `<button class="idea-btn idea-btn-approve" data-id="${idea.id}" data-action="approved">✅ Approve</button>` : ""}
+          ${idea.status !== "rejected" ? `<button class="idea-btn idea-btn-reject" data-id="${idea.id}" data-action="rejected">❌ Reject</button>` : ""}
+          ${idea.status === "approved" ? `<button class="idea-btn idea-btn-built" data-id="${idea.id}" data-action="built">🚀 Mark Built</button>` : ""}
+          <button class="idea-btn idea-btn-del" data-id="${idea.id}" data-action="delete">🗑</button>
+        </div>
+      </div>
+    `).join("");
+
+    list.querySelectorAll(".idea-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const { id, action } = btn.dataset;
+        if (action === "delete") {
+          ideas = ideas.filter(i => i.id !== id);
+          toast2("Idea removed");
+        } else {
+          const idea = ideas.find(i => i.id === id);
+          if (idea) { idea.status = action; toast2(`Idea marked as ${action} ${statusIcon(action)}`); }
+        }
+        DB2.set("ideas", ideas);
+        renderIdeas();
+      });
+    });
+  }
+
+  function initIdeas() {
+    // Tab filters
+    document.querySelectorAll(".idea-tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".idea-tab").forEach(t => t.classList.remove("active"));
+        tab.classList.add("active");
+        currentFilter = tab.dataset.filter;
+        renderIdeas();
+      });
+    });
+
+    // Add idea button
+    document.getElementById("add-idea-btn")?.addEventListener("click", () => {
+      const title = prompt("Idea title:");
+      if (!title?.trim()) return;
+      const desc = prompt("Describe the idea:");
+      if (desc === null) return;
+      ideas.push({ id: uid2(), title: title.trim(), desc: (desc||"").trim(), status: "pending", date: nowStr2(), proposedBy: "Domidev" });
+      DB2.set("ideas", ideas);
+      renderIdeas();
+      toast2("Idea added 💡");
+    });
+  }
+
+  // Wait for DOM then init
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => { initIdeas(); renderIdeas(); });
+  } else {
+    initIdeas(); renderIdeas();
+  }
+})();

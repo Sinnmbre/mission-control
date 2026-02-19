@@ -34,6 +34,7 @@
       <a href="#goals"     class="nav-item" data-section="goals">🎯 Goals</a>
       <a href="#uptime"    class="nav-item" data-section="uptime">🟢 Uptime</a>
       <a href="#notes"     class="nav-item" data-section="notes">📝 Notes</a>
+      <a href="#ideas"     class="nav-item" data-section="ideas">💡 Ideas</a>
     </nav>
 
     <div class="sidebar-footer">
@@ -238,6 +239,24 @@
         <button class="btn btn-primary btn-sm" id="add-note-btn">+ New Note</button>
       </div>
       <div id="notes-grid" class="notes-grid"></div>
+    </section>
+
+    <!-- ══ IDEAS ══════════════════════════════ -->
+    <section id="section-ideas" class="section">
+      <div class="section-head">
+        <h2 class="section-h2">💡 Ideas</h2>
+        <button class="btn btn-primary btn-sm" id="add-idea-btn">+ New Idea</button>
+      </div>
+
+      <div class="idea-tabs">
+        <button class="idea-tab active" data-filter="all">All</button>
+        <button class="idea-tab" data-filter="pending">⏳ Pending</button>
+        <button class="idea-tab" data-filter="approved">✅ Approved</button>
+        <button class="idea-tab" data-filter="rejected">❌ Rejected</button>
+        <button class="idea-tab" data-filter="built">🚀 Built</button>
+      </div>
+
+      <div id="ideas-list" class="ideas-list"></div>
     </section>
 
   </main>
